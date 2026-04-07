@@ -1,11 +1,33 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <title>Quản Lý Sản Phẩm</title>
     <link rel="stylesheet" href="style.css">
+    <div id="root"></div>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="/src/main.jsx"></script>
 </head>
 <body>
+    <script>
+        const userSession = localStorage.getItem('currentUser');
+        if (!userSession) {
+            window.location.href = 'auth.html'; 
+        }
+    </script>
+    <div id="auth-header" style="background: #2c3e50; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div id="auth-guest">
+            <input type="text" id="user_in" placeholder="Username" style="padding: 5px;">
+            <input type="password" id="pass_in" placeholder="Password" style="padding: 5px;">
+            <button onclick="handleLoginUI()" style="background: #27ae60; color: white; border: none; padding: 5px 15px; cursor: pointer;">Đăng nhập</button>
+            <span style="font-size: 12px; margin-left: 10px; color: #bdc3c7;">(admin_hiep/123 hoặc mod_tester/456)</span>
+        </div>
+        
+        <div id="auth-user" style="display: none;">
+            <span>Chào, <strong id="display-name"></strong> (<span id="display-role"></span>)</span>
+            <button onclick="handleLogoutUI()" style="background: #e74c3c; color: white; border: none; padding: 5px 15px; cursor: pointer; margin-left: 10px;">Đăng xuất</button>
+        </div>
+    </div>
 
 <div class="container">
     <h2>Dashboard</h2>
@@ -30,7 +52,7 @@
                 <th>Hình Ảnh</th>
                 <th>Tiêu Đề</th>
                 <th>Giá</th>
-                <th>Mô Tả (Hover)</th>
+                <th>Mô Tả</th>
             </tr>
         </thead>
         <tbody id="table-body"></tbody>
@@ -41,5 +63,18 @@
 
 <script src="user_role_logic.js"></script> 
 <script src="buoi5.js"></script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Sản Phẩm</title>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

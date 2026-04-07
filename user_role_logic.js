@@ -3,11 +3,12 @@ let roles = [
     { id: "1", name: "admin", description: "Toàn quyền hệ thống" },
     { id: "2", name: "mod", description: "Điều phối viên - Chỉ đọc và sửa nhẹ" }
 ];
-let users = [
-    { id: "1", username: "admin_hiep", password: "123", email: "hiep@bk.vn", roleId: "1", status: true },
-    { id: "2", username: "mod_tester", password: "456", email: "mod@bk.vn", roleId: "2", status: true }
-];
-let currentUser = null; // lưu trữ User đang đăng nhập (Session)
+// let users = [
+//     { id: "1", username: "admin", password: "123", email: "hiep@bk.vn", roleId: "1", status: true },
+//     { id: "2", username: "mod_tester", password: "456", email: "mod@bk.vn", roleId: "2", status: true }
+// ];
+let users = [];
+let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null; // lưu trữ User đang đăng nhập (Session)
 let comments = [];
 
 function generateId(collection) {
@@ -16,17 +17,31 @@ function generateId(collection) {
     return (maxId + 1).toString();
 }
 
-function createUser(userData) {
+async function createUser(userData) {
     const newUser = {
         ...userData,
-        id: generateId(users),
+        id: generateId(users), // ID tự tăng
         isDeleted: false,
-        status: false,
+        status: true,
         loginCount: 0,
         createdAt: new Date()
     };
-    users.push(newUser);
-    return newUser;
+
+    try {
+        const response = await fetch('http://localhost:3001/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newUser)
+        });
+
+        if (response.ok) {
+            const savedUser = await response.json();
+            users.push(savedUser); // Cập nhật mảng local
+            return savedUser;
+        }
+    } catch (error) {
+        console.error("Lỗi lưu User:", error);
+    }
 }
 
 function softDelete(collection, id) {
@@ -85,7 +100,11 @@ function login(username, password) {
     return { success: true, user };
 }
 
-function logout() { currentUser = null; }
+function logout() {
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+    window.location.href = 'auth.html';
+}
 
 function getRoleName(roleId) {
     return roles.find(r => r.id === roleId)?.name || "guest";

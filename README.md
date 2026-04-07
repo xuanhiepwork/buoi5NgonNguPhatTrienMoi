@@ -19,3 +19,8 @@ git commit -m "Dọn dẹp: Xóa package-lock và node_modules khỏi GitHub"
 git push origin main
 
 
+login("admin", "admin123");
+
+# RUN
+npm run server
+npm run dev

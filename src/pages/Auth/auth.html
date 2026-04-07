@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Xác thực - Hệ thống Quản lý</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .auth-container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 350px; }
+        h2 { text-align: center; color: #3498db; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #2980b9; }
+        .toggle-link { text-align: center; margin-top: 15px; font-size: 14px; cursor: pointer; color: #7f8c8d; }
+        .toggle-link b { color: #3498db; }
+    </style>
+</head>
+<body>
+
+<div class="auth-container">
+    <div id="login-form">
+        <h2>Đăng Nhập</h2>
+        <input type="text" id="login_user" placeholder="Tên đăng nhập">
+        <input type="password" id="login_pass" placeholder="Mật khẩu">
+        <button onclick="handleLogin()">VÀO DASHBOARD</button>
+        <p class="toggle-link" onclick="toggleAuth(false)">Chưa có tài khoản? <b>Đăng ký ngay</b></p>
+    </div>
+
+    <div id="register-form" style="display: none;">
+        <h2>Đăng Ký</h2>
+        <input type="text" id="reg_user" placeholder="Tên đăng nhập mới">
+        <input type="email" id="reg_email" placeholder="Email">
+        <input type="password" id="reg_pass" placeholder="Mật khẩu">
+        <button onclick="handleRegister()" style="background: #27ae60;">TẠO TÀI KHOẢN</button>
+        <p class="toggle-link" onclick="toggleAuth(true)">Đã có tài khoản? <b>Đăng nhập</b></p>
+    </div>
+</div>
+
+<script src="user_role_logic.js"></script>
+<script>
+    // Kiểm tra nếu đã login rồi thì không cho vào trang này nữa, đẩy sang index
+    if (localStorage.getItem('currentUser')) {
+        window.location.href = 'index.html';
+    }
+
+    function toggleAuth(isLogin) {
+        document.getElementById('login-form').style.display = isLogin ? 'block' : 'none';
+        document.getElementById('register-form').style.display = isLogin ? 'none' : 'block';
+    }
+
+    function handleLogin() {
+        const u = document.getElementById('login_user').value;
+        const p = document.getElementById('login_pass').value;
+        const res = login(u, p);
+        if (res.success) {
+            // Lưu vào localStorage để các trang khác biết đã login
+            localStorage.setItem('currentUser', JSON.stringify(res.user));
+            window.location.href = 'index.html';
+        } else {
+            alert(res.msg);
+        }
+    }
+
+    async function handleRegister() {
+        const username = document.getElementById('reg_user').value;
+        const email = document.getElementById('reg_email').value;
+        const password = document.getElementById('reg_pass').value;
+        if(!username || !password) return alert("Vui lòng nhập đủ thông tin");
+        const newUser = await createUser({ username, email, password, roleId: "2", status: true });
+        if (newUser) {
+            alert("Đăng ký thành công! Hãy đăng nhập.");
+            toggleAuth(true);
+        } else {
+            alert("Đăng ký thất bại. Kiểm tra json-server!");
+        }
+    }
+</script>
+</body>
+</html>

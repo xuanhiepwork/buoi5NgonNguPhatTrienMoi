@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
     --zebra-black: #1a1a1a;
     --zebra-white: #ffffff;

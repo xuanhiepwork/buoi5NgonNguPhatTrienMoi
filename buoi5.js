@@ -46,6 +46,16 @@ function renderTable() {
         const isDeleted = item.isDeleted;
         const rowClass = isDeleted ? 'deleted-post' : '';
 
+        const actionButtons = `
+            <div style="display: flex; gap: 5px;">
+                ${checkPermission('product', 'update') && !isDeleted ?
+                `<button onclick="editProduct(${item.id})" style="background:#f1c40f; border:none; padding:5px 10px; cursor:pointer; border-radius:3px;">Sửa</button>` : ''}
+                
+                ${checkPermission('product', 'delete') && !isDeleted ?
+                `<button onclick="deleteProduct(${item.id})" style="background:#e74c3c; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px;">Xóa</button>` : ''}
+            </div>
+        `;
+
         // Hiển thị dấu gạch ngang (-) cho ID và Title nếu bị xóa mềm
         const displayId = isDeleted ? `- ${item.id}` : item.id;
         const displayTitle = isDeleted ? `- ${item.title}` : item.title;
@@ -74,6 +84,40 @@ function renderTable() {
     }).join('');
 
     renderPagination(); // Gọi hàm phân trang sau khi render xong bảng
+}
+
+function handleLoginUI() {
+    const u = document.getElementById('user_in').value;
+    const p = document.getElementById('pass_in').value;
+    const res = login(u, p);
+
+    if (res.success) {
+        updateUIState(true);
+        renderTable();
+    } else {
+        alert(res.msg);
+    }
+}
+
+function handleLogoutUI() {
+    logout();
+    updateUIState(false);
+    renderTable();
+}
+
+function updateUIState(isLoggedIn) {
+    const guestZone = document.getElementById('auth-guest');
+    const userZone = document.getElementById('auth-user');
+
+    if (isLoggedIn && currentUser) {
+        guestZone.style.display = 'none';
+        userZone.style.display = 'block';
+        document.getElementById('display-name').innerText = currentUser.username;
+        document.getElementById('display-role').innerText = getRoleName(currentUser.roleId);
+    } else {
+        guestZone.style.display = 'block';
+        userZone.style.display = 'none';
+    }
 }
 
 function handleSearch() {
@@ -117,11 +161,10 @@ function renderPagination() {
 
 async function deleteProduct(productId) {
     if (typeof checkPermission !== 'function' || !checkPermission('product', 'delete')) {
-        alert("⛔ Lỗi: Chỉ ADMIN mới có quyền xóa sản phẩm!");
+        alert("Lỗi: Chỉ ADMIN mới có quyền xóa sản phẩm!");
         return;
     }
 
-    // Logic xóa mềm thực tế trên giao diện:
     const item = allProducts.find(p => p.id == productId);
     if (item) {
         item.isDeleted = true;
@@ -130,13 +173,62 @@ async function deleteProduct(productId) {
     }
 }
 
-// Ví dụ hàm Create/Update
 async function saveProduct(data) {
-    if (!checkPermission('product', 'create') && !checkPermission('product', 'update')) {
-        alert("⛔ Bạn không có quyền thực hiện thao tác này!");
+    const isUpdate = !!data.id;
+    const action = isUpdate ? 'update' : 'create';
+
+    if (!checkPermission('product', action)) {
+        alert(`Bạn không có quyền ${action === 'create' ? 'thêm mới' : 'chỉnh sửa'} sản phẩm!`);
         return;
     }
-    // Thực hiện logic lưu...
+
+    try {
+        let response;
+        if (isUpdate) {
+            // --- LOGIC UPDATE (PUT) ---
+            response = await fetch(`${URL_API}/${data.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+        } else {
+            // --- LOGIC CREATE (POST) ---
+            // Yêu cầu: ID tự tăng = maxId + 1 (Lưu dạng String)
+            const newId = generateId(allProducts);
+
+            const newProduct = {
+                ...data,
+                id: newId,
+                isDeleted: false,
+                images: data.images || ["https://placehold.co/600x400"] // Ảnh mặc định nếu thiếu
+            };
+
+            response = await fetch(URL_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newProduct)
+            });
+        }
+
+        if (response.ok) {
+            const result = await response.json();
+            alert(`${isUpdate ? 'Cập nhật' : 'Thêm mới'} thành công!`);
+            if (isUpdate) {
+                const index = allProducts.findIndex(p => p.id == data.id);
+                allProducts[index] = { ...allProducts[index], ...result };
+            } else {
+                allProducts.unshift(result);
+            }
+
+            filteredProducts = [...allProducts];
+            renderTable();
+        } else {
+            throw new Error("Lỗi phản hồi từ Server");
+        }
+    } catch (error) {
+        console.error("Lỗi khi lưu:", error);
+        alert("Thao tác thất bại. Vui lòng kiểm tra lại kết nối API.");
+    }
 }
 
 GetAll();
