@@ -5,13 +5,11 @@ let currentPage = 1;
 let pageSize = 10;
 let sortDir = { price: 1, title: 1 };
 
-// 1. Hàm lấy dữ liệu Dashboard (getall)
 async function GetAll() {
     try {
         const res = await fetch(URL_API);
         let data = await res.json();
 
-        // Giả lập thêm trường isDeleted cho demo Soft Delete
         allProducts = data.map(item => ({ ...item, isDeleted: false }));
         filteredProducts = [...allProducts];
         renderTable();
@@ -20,13 +18,12 @@ async function GetAll() {
     }
 }
 
-// 2. Request Functions (Sản phẩm & Chi tiết)
 async function getProductById(id) {
     const res = await fetch(`${URL_API}/${id}`);
     return await res.json();
 }
 
-// Hàm thực hiện query: title, maxPrice, minPrice
+// title, maxPrice, minPrice
 function queryProducts(params) {
     const { title, minPrice, maxPrice, slug } = params;
     return allProducts.filter(p => {
@@ -34,24 +31,24 @@ function queryProducts(params) {
         if (title) match = match && p.title.toLowerCase().includes(title.toLowerCase());
         if (minPrice) match = match && p.price >= minPrice;
         if (maxPrice) match = match && p.price <= maxPrice;
-        // API mẫu không có slug thực tế, giả định slug = title dạng-shorthand
         if (slug) match = match && p.title.toLowerCase().replace(/ /g, '-') === slug;
         return match;
     });
 }
 
-// 3. Render Table & Soft Delete Display
 function renderTable() {
     const tableBody = document.getElementById('table-body');
     const start = (currentPage - 1) * pageSize;
     const dataToShow = filteredProducts.slice(start, start + pageSize);
 
     tableBody.innerHTML = dataToShow.map(item => {
-        // Nếu xóa mềm, thêm class deleted-post (hiển thị dấu gạch ngang)
         const rowClass = item.isDeleted ? 'deleted-post' : '';
         const imagesHtml = item.images.map(img => {
-            let src = img.replace(/[\[\]"]/g, "");
-            return `<img src="${src}" class="product-img" onerror="this.src='https://via.placeholder.com/50'">`;
+            let cleanUrl = img.replace(/[\[\]"]/g, "");
+            if (!cleanUrl || cleanUrl.includes("placeimg.com") || cleanUrl.trim() === "") {
+                cleanUrl = 'https://placehold.co/150'; // Dùng link placeholder tin cậy hơn
+            }
+            return `<img src="${cleanUrl}" class="product-img" onerror="this.src='https://placehold.co/150'">`;
         }).join('');
 
         return `
@@ -70,7 +67,6 @@ function renderTable() {
     renderPagination();
 }
 
-// 4. Tìm kiếm onChange
 function handleSearch() {
     const val = document.getElementById('search_txt').value.toLowerCase();
     filteredProducts = allProducts.filter(p => p.title.toLowerCase().includes(val));
@@ -78,7 +74,6 @@ function handleSearch() {
     renderTable();
 }
 
-// 5. Phân trang & Sắp xếp
 function handlePageSize() {
     pageSize = parseInt(document.getElementById('page_size').value);
     currentPage = 1;
