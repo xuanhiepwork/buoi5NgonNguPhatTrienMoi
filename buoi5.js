@@ -9,7 +9,6 @@ async function GetAll() {
     try {
         const res = await fetch(URL_API);
         let data = await res.json();
-
         allProducts = data.map(item => ({ ...item, isDeleted: false }));
         filteredProducts = [...allProducts];
         renderTable();
@@ -38,33 +37,43 @@ function queryProducts(params) {
 
 function renderTable() {
     const tableBody = document.getElementById('table-body');
+    if (!tableBody) return;
+
     const start = (currentPage - 1) * pageSize;
     const dataToShow = filteredProducts.slice(start, start + pageSize);
 
     tableBody.innerHTML = dataToShow.map(item => {
-        const rowClass = item.isDeleted ? 'deleted-post' : '';
+        const isDeleted = item.isDeleted;
+        const rowClass = isDeleted ? 'deleted-post' : '';
+
+        // Hiển thị dấu gạch ngang (-) cho ID và Title nếu bị xóa mềm
+        const displayId = isDeleted ? `- ${item.id}` : item.id;
+        const displayTitle = isDeleted ? `- ${item.title}` : item.title;
+
+        // Xử lý hình ảnh rác từ API
         const imagesHtml = item.images.map(img => {
             let cleanUrl = img.replace(/[\[\]"]/g, "");
             if (!cleanUrl || cleanUrl.includes("placeimg.com") || cleanUrl.trim() === "") {
-                cleanUrl = 'https://placehold.co/150'; // Dùng link placeholder tin cậy hơn
+                cleanUrl = 'https://placehold.co/150';
             }
             return `<img src="${cleanUrl}" class="product-img" onerror="this.src='https://placehold.co/150'">`;
         }).join('');
 
         return `
             <tr class="${rowClass}">
-                <td>${item.id}</td>
-                <td>${imagesHtml}</td>
-                <td>${item.title}</td>
+                <td>${displayId}</td>
+                <td><div class="image-grid">${imagesHtml}</div></td>
+                <td>${displayTitle}</td>
                 <td>$${item.price}</td>
                 <td class="desc-col">
-                    Xem mô tả...
+                    ${isDeleted ? '🚩 Đã xóa mềm' : '📋 Xem mô tả...'}
                     <div class="desc-text">${item.description}</div>
                 </td>
             </tr>
         `;
     }).join('');
-    renderPagination();
+
+    renderPagination(); // Gọi hàm phân trang sau khi render xong bảng
 }
 
 function handleSearch() {
@@ -83,9 +92,12 @@ function handlePageSize() {
 function sortData(key) {
     sortDir[key] *= -1;
     filteredProducts.sort((a, b) => {
-        if (a[key] < b[key]) return -1 * sortDir[key];
-        if (a[key] > b[key]) return 1 * sortDir[key];
-        return 0;
+        let valA = a[key], valB = b[key];
+        if (typeof valA === 'string') {
+            valA = valA.toLowerCase();
+            valB = valB.toLowerCase();
+        }
+        return valA > valB ? (1 * sortDir[key]) : (-1 * sortDir[key]);
     });
     renderTable();
 }
@@ -93,11 +105,38 @@ function sortData(key) {
 function renderPagination() {
     const totalPages = Math.ceil(filteredProducts.length / pageSize);
     const pagDiv = document.getElementById('pagination');
+    if (!pagDiv) return;
+
     let html = '';
     for (let i = 1; i <= totalPages; i++) {
-        html += `<button onclick="currentPage=${i}; renderTable()" style="${currentPage === i ? 'background:#3498db;color:#fff' : ''}">${i}</button>`;
+        html += `<button onclick="currentPage=${i}; renderTable()" 
+                 style="${currentPage === i ? 'background:#3498db;color:#fff;font-weight:bold' : ''}">${i}</button>`;
     }
     pagDiv.innerHTML = html;
+}
+
+async function deleteProduct(productId) {
+    if (typeof checkPermission !== 'function' || !checkPermission('product', 'delete')) {
+        alert("⛔ Lỗi: Chỉ ADMIN mới có quyền xóa sản phẩm!");
+        return;
+    }
+
+    // Logic xóa mềm thực tế trên giao diện:
+    const item = allProducts.find(p => p.id == productId);
+    if (item) {
+        item.isDeleted = true;
+        renderTable();
+        console.log(`Đã xóa mềm sản phẩm ${productId}`);
+    }
+}
+
+// Ví dụ hàm Create/Update
+async function saveProduct(data) {
+    if (!checkPermission('product', 'create') && !checkPermission('product', 'update')) {
+        alert("⛔ Bạn không có quyền thực hiện thao tác này!");
+        return;
+    }
+    // Thực hiện logic lưu...
 }
 
 GetAll();

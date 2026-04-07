@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="auth-section" style="padding: 10px; border: 1px solid #ccc; margin-bottom: 20px;">
+        <h3>🔐 Hệ thống Auth</h3>
+        <div id="login-form">
+            <input type="text" id="user_in" placeholder="Username">
+            <input type="password" id="pass_in" placeholder="Password">
+            <button onclick="handleLogin()">Đăng nhập</button>
+        </div>
+        
+        <div id="change-pass-form" style="display:none; margin-top:10px;">
+            <input type="password" id="old_pass" placeholder="Mật khẩu cũ">
+            <input type="password" id="new_pass" placeholder="Mật khẩu mới">
+            <button onclick="handleChangePass()">Đổi mật khẩu</button>
+            <button onclick="handleLogout()">Đăng xuất</button>
+        </div>
+    </div>
+
+    <script src="user_role_logic.js"></script>
+    <script>
+        function handleLogin() {
+            const u = document.getElementById('user_in').value;
+            const p = document.getElementById('pass_in').value;
+            const res = login(u, p);
+            
+            if(res.success) {
+                alert("Chào " + res.user.username);
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('change-pass-form').style.display = 'block';
+            } else {
+                alert(res.msg);
+            }
+        }
+
+        function handleChangePass() {
+            const oldP = document.getElementById('old_pass').value;
+            const newP = document.getElementById('new_pass').value;
+            const res = changePassword(oldP, newP);
+            alert(res.msg);
+        }
+
+        function handleLogout() {
+            logout();
+            location.reload(); // Tải lại trang để về trạng thái Guest
+        }
+    </script>
+
+</body>
+</html>
