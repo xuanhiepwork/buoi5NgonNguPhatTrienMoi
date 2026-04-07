@@ -1,63 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Trần Xuân Hiệp - 2280618989</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .toolbar { display: flex; gap: 20px; background: #f4f4f4; padding: 15px; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        
-        /* CSS Yêu cầu: 1 dòng đen, 1 dòng trắng */
-        tbody tr:nth-child(odd) { background-color: #000; color: #fff; }
-        tbody tr:nth-child(even) { background-color: #fff; color: #000; }
-
-        /* CSS Yêu cầu: Hiển thị toàn bộ hình */
-        .product-img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; }
-
-        /* CSS Yêu cầu: Ẩn description, chỉ hiện khi hover */
-        .desc-col { visibility: hidden; opacity: 0; transition: 0.3s; max-width: 300px; }
-        tr:hover .desc-col { visibility: visible; opacity: 1; }
-
-        th { cursor: pointer; background-color: #444; color: white; }
-        .pagination { margin-top: 15px; }
-        button { padding: 5px 10px; cursor: pointer; }
-    </style>
+    <title>Quản Lý Sản Phẩm - Premium Dashboard</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Dashboard Quản lý Sản phẩm - API</h1>
 
+<div class="container">
+    <h2>Dashboard</h2>
+    
     <div class="toolbar">
-        <div>
-            <label>Tìm kiếm:</label>
-            <input type="text" id="search_txt" placeholder="Nhập tiêu đề..." oninput="handleSearch()">
-        </div>
-        <div>
-            <label>Hiển thị:</label>
-            <select id="page_size" onchange="handlePageSize()">
-                <option value="5">5 dòng</option>
-                <option value="10" selected>10 dòng</option>
-                <option value="20">20 dòng</option>
-            </select>
-        </div>
+        <input type="text" id="search_txt" placeholder="Tìm theo tiêu đề..." oninput="handleSearch()">
+        
+        <select id="page_size" onchange="handlePageSize()">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+        </select>
+
+        <button onclick="sortData('price')">Sắp xếp theo giá</button>
+        <button onclick="sortData('title')">Sắp xếp theo tên</button>
     </div>
 
-    <table>
+    <table id="product-table">
         <thead>
             <tr>
-                <th onclick="sortData('id')">ID ↕</th>
-                <th onclick="sortData('title')">Title ↕</th>
-                <th onclick="sortData('price')">Price ↕</th>
-                <th>Image</th>
-                <th>Description (Hover)</th>
+                <th>ID</th>
+                <th>Hình Ảnh</th>
+                <th>Tiêu Đề</th>
+                <th>Giá</th>
+                <th>Mô Tả (Hover)</th>
             </tr>
         </thead>
         <tbody id="table-body"></tbody>
     </table>
 
-    <div id="pagination" class="pagination"></div>
+    <div id="pagination" style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;"></div>
+</div>
 
-    <script src="buoi3.js"></script>
+<script src="buoi3.js"></script>
 </body>
 </html>

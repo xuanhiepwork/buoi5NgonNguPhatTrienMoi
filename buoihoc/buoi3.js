@@ -30,11 +30,19 @@ function renderTable() {
     const dataToShow = filteredProducts.slice(startIndex, endIndex);
 
     tableBody.innerHTML = dataToShow.map(item => {
-        let imgUrl = item.images[0];
-        // Xử lý link ảnh lỗi nếu có định dạng ["url"]
-        if (imgUrl && imgUrl.startsWith('["')) {
-            imgUrl = imgUrl.replace('["', '').replace('"]', '');
-        }
+        // Xử lý toàn bộ mảng hình ảnh thay vì chỉ lấy images[0]
+        const allImagesHtml = item.images.map(imgUrl => {
+            // Fix lỗi định dạng link nếu có ["..."]
+            let cleanUrl = imgUrl;
+            if (cleanUrl.startsWith('["')) {
+                cleanUrl = cleanUrl.replace('["', '').replace('"]', '');
+            }
+            if (cleanUrl.endsWith('"]')) {
+                cleanUrl = cleanUrl.replace('"]', '');
+            }
+
+            return `<img src="${cleanUrl}" class="product-img" onerror="this.src='https://via.placeholder.com/80'">`;
+        }).join(''); // Ghép các thẻ <img> lại với nhau
 
         return `
             <tr>
@@ -42,7 +50,9 @@ function renderTable() {
                 <td>${item.title}</td>
                 <td>$${item.price}</td>
                 <td>
-                    <img src="${imgUrl}" class="product-img" onerror="this.src='https://via.placeholder.com/80'">
+                    <div class="image-container">
+                        ${allImagesHtml}
+                    </div>
                 </td>
                 <td class="desc-col">${item.description}</td>
             </tr>
@@ -101,5 +111,4 @@ function goToPage(page) {
     renderTable();
 }
 
-// Gọi hàm chạy ban đầu
 GetAll();

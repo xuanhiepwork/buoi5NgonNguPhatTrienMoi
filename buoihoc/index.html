@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Dashboard | Sản Phẩm</title>
+    <style>
+        /* 1. CẤU HÌNH CHUNG */
+        :root {
+            --primary-color: #3498db;
+            --dark-row: #2c3e50;
+            --light-row: #ffffff;
+            --text-light: #ecf0f1;
+            --text-dark: #2c3e50;
+            --bg-body: #f4f6f8;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-body);
+            margin: 0; padding: 20px; color: #333;
+        }
+
+        .container {
+            max-width: 1200px; margin: 0 auto;
+            background: white; padding: 20px;
+            border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 { text-align: center; color: var(--dark-row); margin-bottom: 30px; text-transform: uppercase; }
+
+        /* 2. TOOLBAR */
+        .toolbar {
+            display: flex; gap: 20px; flex-wrap: wrap;
+            background: linear-gradient(135deg, #eef2f5 0%, #f5f7fa 100%);
+            padding: 20px; border-radius: 10px; margin-bottom: 25px; border: 2px solid #dae1e7;
+        }
+        .form-group { display: flex; align-items: center; gap: 12px; }
+        label { font-weight: 600; color: #2c3e50; }
+        input, select {
+            padding: 10px 15px; border: 2px solid #ccc; border-radius: 8px; outline: none;
+        }
+        input:focus, select:focus { border-color: var(--primary-color); background-color: #f9fcfe; }
+        input { width: 250px; }
+
+        /* 3. BẢNG DỮ LIỆU */
+        table {
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            border-radius: 10px; overflow: hidden; border: 2px solid #ddd;
+        }
+        th, td { padding: 15px; text-align: left; vertical-align: middle; border-bottom: 1px solid #e0e0e0; }
+        
+        th {
+            background-color: var(--primary-color); color: white;
+            font-weight: 600; cursor: pointer; user-select: none;
+        }
+        th:hover { background-color: #2980b9; }
+
+        .sort-btn {
+            background: none; border: none; color: white; cursor: pointer; font-size: 14px; margin-left: 5px;
+        }
+
+        /* Zebra Stripes (Đen/Trắng) */
+        tbody tr:nth-child(even) { background-color: var(--light-row); color: var(--text-dark); }
+        tbody tr:nth-child(odd) { background-color: var(--dark-row); color: var(--text-light); }
+
+        /* Hover Row Effect */
+        tbody tr:hover {
+            background-color: #34495e !important; color: white !important;
+            transform: scale(1.005); transition: 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        /* Đảm bảo text trong các dòng chẵn/lẻ đổi màu khi hover */
+        tbody tr:hover td { color: white !important; }
+
+        /* 4. HÌNH ẢNH */
+        .image-grid { display: flex; gap: 5px; width: 180px; flex-wrap: wrap; }
+        .product-img {
+            width: 45px; height: 45px; object-fit: cover;
+            border-radius: 4px; border: 1px solid #fff;
+        }
+
+        /* 5. DESCRIPTION TOOLTIP (Đã Fix) */
+        .title-cell { position: relative; cursor: help; }
+        
+        .desc-content {
+            position: absolute;
+            bottom: 100%; left: 20px; /* Hiện phía trên tiêu đề */
+            background: rgba(44, 62, 80, 0.95);
+            color: #fff !important; /* Luôn màu trắng */
+            padding: 15px;
+            border-radius: 8px;
+            width: 300px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            z-index: 1000;
+            
+            /* Ẩn mặc định */
+            opacity: 0; visibility: hidden; transform: translateY(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            
+            font-size: 13px; line-height: 1.5; font-weight: normal;
+            border: 1px solid var(--primary-color);
+        }
+
+        /* Mũi tên nhỏ chỉ xuống */
+        .desc-content::after {
+            content: ""; position: absolute; top: 100%; left: 20px;
+            border-width: 8px; border-style: solid;
+            border-color: rgba(44, 62, 80, 0.95) transparent transparent transparent;
+        }
+
+        /* Khi hover vào ô Title thì hiện tooltip */
+        .title-cell:hover .desc-content {
+            opacity: 1; visibility: visible; transform: translateY(0);
+        }
+
+        /* 6. PHÂN TRANG */
+        .pagination { display: flex; justify-content: center; margin-top: 20px; gap: 10px; }
+        .btn-page {
+            padding: 8px 16px; border-radius: 20px; border: 1px solid #ddd;
+            background: white; cursor: pointer; font-weight: bold;
+        }
+        .btn-page:hover:not(:disabled) { background: var(--primary-color); color: white; }
+        .btn-page:disabled { background: #eee; color: #aaa; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>✨ Dashboard Quản Lý Sản Phẩm</h1>
+
+        <div class="toolbar">
+            <div class="form-group">
+                <label>🔍 Tìm kiếm:</label>
+                <input type="text" id="search_txt" placeholder="Nhập tên sản phẩm..." oninput="handleSearch()">
+            </div>
+            <div class="form-group">
+                <label>Hiển thị:</label>
+                <select id="page_size" onchange="handlePageSize()">
+                    <option value="5">5 dòng / trang</option>
+                    <option value="10" selected>10 dòng / trang</option>
+                    <option value="20">20 dòng / trang</option>
+                </select>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th width="80">ID <button class="sort-btn" onclick="sortData('id')">⇅</button></th>
+                    <th>Tên Sản Phẩm (Hover xem mô tả) <button class="sort-btn" onclick="sortData('title')">⇅</button></th>
+                    <th width="120">Giá ($) <button class="sort-btn" onclick="sortData('price')">⇅</button></th>
+                    <th width="200">Hình Ảnh</th>
+                </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <script>
+        const URL_API = 'https://api.escuelajs.co/api/v1/products';
+        let allProducts = [], filteredProducts = [];
+        let currentPage = 1, pageSize = 10, sortDirection = 1, currentSortKey = null;
+
+        async function GetAll() {
+            try {
+                const res = await fetch(URL_API);
+                const data = await res.json();
+                allProducts = data;
+                filteredProducts = data;
+                renderTable();
+            } catch (error) { console.error("Lỗi:", error); }
+        }
+
+        function renderTable() {
+            const tableBody = document.getElementById('table-body');
+            const start = (currentPage - 1) * pageSize;
+            const dataToShow = filteredProducts.slice(start, start + pageSize);
+
+            if (dataToShow.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Không tìm thấy!</td></tr>';
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            tableBody.innerHTML = dataToShow.map(item => {
+                const imagesHtml = item.images.map(url => {
+                    let cleanUrl = url.replace(/\["|"]/g, '').replace('"', '');
+                    return `<img src="${cleanUrl}" class="product-img" onerror="this.src='https://via.placeholder.com/50'">`;
+                }).join('');
+
+                return `
+                    <tr>
+                        <td><b>#${item.id}</b></td>
+                        
+                        <td class="title-cell">
+                            ${item.title}
+                            <div class="desc-content">
+                                <strong>Chi tiết sản phẩm:</strong><br>
+                                ${item.description}
+                            </div>
+                        </td>
+
+                        <td style="color: #e74c3c; font-weight: bold;">$${item.price}</td>
+                        <td><div class="image-grid">${imagesHtml}</div></td>
+                    </tr>
+                `;
+            }).join('');
+
+            renderPagination();
+        }
+
+        function handleSearch() {
+            const keyword = document.getElementById('search_txt').value.toLowerCase();
+            filteredProducts = allProducts.filter(p => p.title.toLowerCase().includes(keyword));
+            currentPage = 1; renderTable();
+        }
+
+        function handlePageSize() {
+            pageSize = parseInt(document.getElementById('page_size').value);
+            currentPage = 1; renderTable();
+        }
+
+        function sortData(key) {
+            if (currentSortKey === key) sortDirection *= -1;
+            else { currentSortKey = key; sortDirection = 1; }
+
+            filteredProducts.sort((a, b) => {
+                let valA = a[key], valB = b[key];
+                if (typeof valA === 'string') { valA = valA.toLowerCase(); valB = valB.toLowerCase(); }
+                return valA > valB ? sortDirection : -sortDirection;
+            });
+            renderTable();
+        }
+
+        function renderPagination() {
+            const total = Math.ceil(filteredProducts.length / pageSize);
+            document.getElementById('pagination').innerHTML = `
+                <button class="btn-page" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>← Trước</button>
+                <span style="padding: 10px; font-weight: bold;">Trang ${currentPage} / ${total}</span>
+                <button class="btn-page" onclick="goToPage(${currentPage + 1})" ${currentPage === total ? 'disabled' : ''}>Sau →</button>
+            `;
+        }
+
+        function goToPage(p) { currentPage = p; renderTable(); }
+
+        GetAll();
+    </script>
+</body>
+</html>
